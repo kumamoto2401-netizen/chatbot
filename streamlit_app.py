@@ -52,7 +52,7 @@ else:
 
                 # Claude API呼び出し
                 response = client.messages.create(
-                    model="claude-3-haiku-20240307",  # 最新の利用可能なモデルを使用
+                    model="claude-sonnet-4-20250514",  # 最新の利用可能なモデルを使用
                     messages=api_messages,
                     system=SYSTEM_PROMPT,
                     temperature=0.7,
