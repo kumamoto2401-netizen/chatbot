@@ -8,9 +8,6 @@ st.write(
     "Get your API key from [Anthropic Console](https://console.anthropic.com/) and set it in `.streamlit/secrets.toml`."
 )
 
-# システムメッセージの設定
-SYSTEM_MESSAGE = "You are a helpful AI assistant. Please provide clear and concise responses."
-
 anthropic_api_key = st.secrets.get("anthropic_api_key")
 if not anthropic_api_key:
     st.info(
@@ -41,24 +38,24 @@ else:
                 st.markdown(prompt)
 
             try:
-                # Prepare messages for Claude API
-                messages = [{"role": "system", "content": SYSTEM_MESSAGE}]
-                for msg in st.session_state.messages:
-                    messages.append({
-                        "role": msg["role"],
-                        "content": msg["content"]
-                    })
+                # Prepare messages for Claude API - only include user and assistant messages
+                api_messages = [
+                    {"role": msg["role"], "content": msg["content"]}
+                    for msg in st.session_state.messages
+                    if msg["role"] in ["user", "assistant"]
+                ]
 
-                # Call Claude API
+                # Call Claude API with system parameter at top level
                 response = client.messages.create(
                     model="claude-3-sonnet-20240229",
-                    messages=messages,
+                    messages=api_messages,
+                    system="You are a helpful AI assistant. Please provide clear and concise responses.",
                     temperature=0.7,
                     max_tokens=1024
                 )
 
                 # Process response
-                if response.content and len(response.content) > 0:
+                if response and response.content and len(response.content) > 0:
                     reply = response.content[0].text
                     with st.chat_message("assistant"):
                         st.markdown(reply)
