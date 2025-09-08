@@ -1,23 +1,22 @@
 import streamlit as st
-import google.generativeai as genai
+from anthropic import Anthropic
 
 st.title("💬 Chatbot")
 st.write(
-    "This is a simple chatbot that uses Gemini 2.5-flash model to generate responses. "
-    "Set your Google API key in Streamlit secrets. "
-    "API key is [here](https://makersuite.google.com/app/apikey) and set it in `.streamlit/secrets.toml`."
+    "This is a simple chatbot that uses Claude 3.5 Sonnet model to generate responses. "
+    "Set your Anthropic API key in Streamlit secrets. "
+    "Get your API key from [Anthropic Console](https://console.anthropic.com/) and set it in `.streamlit/secrets.toml`."
 )
 
-google_api_key = st.secrets.get("google_api_key")
-if not google_api_key:
+anthropic_api_key = st.secrets.get("anthropic_api_key")
+if not anthropic_api_key:
     st.info(
-        "Please add your Google API key to your Streamlit secrets file (`.streamlit/secrets.toml`) like this:\n\n"
-        "[general]\ngoogle_api_key = \"...\"\n",
+        "Please add your Anthropic API key to your Streamlit secrets file (`.streamlit/secrets.toml`) like this:\n\n"
+        "[general]\nanthropic_api_key = \"...\"\n",
         icon="🗝️"
     )
 else:
-    genai.configure(api_key=google_api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    client = Anthropic(api_key=anthropic_api_key)
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -31,12 +30,18 @@ else:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Geminiへの入力は配列または文字列のみ
-        # roleやpartsは不要
-        chat_history = [m["content"] for m in st.session_state.messages]
+        # Convert messages to Claude format
+        claude_messages = [
+            {"role": "assistant" if msg["role"] == "assistant" else "user", "content": msg["content"]}
+            for msg in st.session_state.messages
+        ]
 
-        response = model.generate_content(chat_history)
-        reply = response.text
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            messages=claude_messages,
+            max_tokens=1024
+        )
+        reply = response.content[0].text
 
         with st.chat_message("assistant"):
             st.markdown(reply)
