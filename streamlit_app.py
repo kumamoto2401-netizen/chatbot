@@ -5,16 +5,18 @@ from openai import OpenAI
 st.title("💬 Chatbot")
 st.write(
     "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+    "To use this app, you need to set your OpenAI API key in Streamlit secrets. "
     "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
+# Get OpenAI API key from Streamlit secrets.
+openai_api_key = st.secrets.get("openai_api_key")
 if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
+    st.info(
+        "Please add your OpenAI API key to your Streamlit secrets file (`.streamlit/secrets.toml`) like this:\n\n"
+        "[general]\nopenai_api_key = \"sk-...\"\n",
+        icon="🗝️"
+    )
 else:
 
     # Create an OpenAI client.
