@@ -3,13 +3,13 @@ from anthropic import Anthropic
 
 st.title("💬 Chatbot")
 st.write(
-    "This is a simple chatbot that uses Claude AI model to generate responses. "
+    "This is a simple chatbot that uses Claude-3 to generate responses. "
     "Set your Anthropic API key in Streamlit secrets. "
     "Get your API key from [Anthropic Console](https://console.anthropic.com/) and set it in `.streamlit/secrets.toml`."
 )
 
-# システムメッセージの設定
-SYSTEM_MESSAGE = "You are a helpful AI assistant. Please provide clear and concise responses."
+# システムプロンプトの設定
+SYSTEM_PROMPT = "You are a helpful AI assistant. Please provide clear and concise responses."
 
 anthropic_api_key = st.secrets.get("anthropic_api_key")
 if not anthropic_api_key:
@@ -28,38 +28,38 @@ else:
                 "content": "Hello! How can I help you today?"
             }]
 
-        # Display chat history
+        # チャット履歴の表示
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Chat input
+        # チャット入力
         if prompt := st.chat_input("What is up?"):
-            # Add user message to chat history
+            # ユーザーメッセージをチャット履歴に追加
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             try:
-                # Prepare messages for Claude API
-                messages = []
+                # API用のメッセージ準備（システムプロンプトは別パラメータとして渡す）
+                api_messages = []
                 for msg in st.session_state.messages:
-                    if msg["role"] in ["user", "assistant"]:  # Only include user and assistant messages
-                        messages.append({
+                    if msg["role"] in ["user", "assistant"]:
+                        api_messages.append({
                             "role": msg["role"],
                             "content": msg["content"]
                         })
 
-                # Call Claude API
+                # Claude API呼び出し
                 response = client.messages.create(
-                    model="claude-3-opus-20240229",  # 修正: 正しいモデル名に変更
-                    messages=messages,
-                    system=SYSTEM_MESSAGE,  # システムメッセージを別パラメータとして設定
+                    model="claude-3-haiku-20240307",  # 最新の利用可能なモデルを使用
+                    messages=api_messages,
+                    system=SYSTEM_PROMPT,
                     temperature=0.7,
                     max_tokens=1024
                 )
 
-                # Process response
+                # レスポンス処理
                 if response.content and len(response.content) > 0:
                     reply = response.content[0].text
                     with st.chat_message("assistant"):
