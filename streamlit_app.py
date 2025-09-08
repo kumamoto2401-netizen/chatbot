@@ -3,10 +3,13 @@ from anthropic import Anthropic
 
 st.title("💬 Chatbot")
 st.write(
-    "This is a simple chatbot that uses Claude 3.5 Sonnet model to generate responses. "
+    "This is a simple chatbot that uses Claude AI model to generate responses. "
     "Set your Anthropic API key in Streamlit secrets. "
     "Get your API key from [Anthropic Console](https://console.anthropic.com/) and set it in `.streamlit/secrets.toml`."
 )
+
+# システムメッセージの設定
+SYSTEM_MESSAGE = "You are a helpful AI assistant. Please provide clear and concise responses."
 
 anthropic_api_key = st.secrets.get("anthropic_api_key")
 if not anthropic_api_key:
@@ -38,24 +41,26 @@ else:
                 st.markdown(prompt)
 
             try:
-                # Prepare messages for Claude API - only include user and assistant messages
-                api_messages = [
-                    {"role": msg["role"], "content": msg["content"]}
-                    for msg in st.session_state.messages
-                    if msg["role"] in ["user", "assistant"]
-                ]
+                # Prepare messages for Claude API
+                messages = []
+                for msg in st.session_state.messages:
+                    if msg["role"] in ["user", "assistant"]:  # Only include user and assistant messages
+                        messages.append({
+                            "role": msg["role"],
+                            "content": msg["content"]
+                        })
 
-                # Call Claude API with system parameter at top level
+                # Call Claude API
                 response = client.messages.create(
-                    model="claude-3-sonnet-20240229",
-                    messages=api_messages,
-                    system="You are a helpful AI assistant. Please provide clear and concise responses.",
+                    model="claude-3-opus-20240229",  # 修正: 正しいモデル名に変更
+                    messages=messages,
+                    system=SYSTEM_MESSAGE,  # システムメッセージを別パラメータとして設定
                     temperature=0.7,
                     max_tokens=1024
                 )
 
                 # Process response
-                if response and response.content and len(response.content) > 0:
+                if response.content and len(response.content) > 0:
                     reply = response.content[0].text
                     with st.chat_message("assistant"):
                         st.markdown(reply)
